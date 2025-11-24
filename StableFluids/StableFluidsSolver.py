@@ -11,4 +11,5 @@ class StableFluidsSolver:
         self.vorticity = vorticity
         self.gauss_seidel_pressure_iterations = gauss_seidel_pressure_iterations
         self.gauss_seidel_viscosity_iterations = gauss_seidel_viscosity_iterations
-
+        self.dx = x_domain / (x_points - 1)
+        self.dy = y_domain / (y_points - 1)
