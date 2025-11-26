@@ -10,4 +10,4 @@ class RectangleObstacle:
         j_left = int(self.y_left / dy)
         i_right = int((self.x_left + self.width) / dx)
         j_right = int((self.y_left + self.width) / dy)
-        field[i_left:i_right, j_left:j_right] = true
+        field[i_left:i_right, j_left:j_right] = True
