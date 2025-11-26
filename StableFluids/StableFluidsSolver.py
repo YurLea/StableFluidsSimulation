@@ -56,6 +56,9 @@ class StableFluidsSolver:
 
     def simulation_step(self):
 
+        self.source_step()
+
+    def source_step(self):
         for u_stream in self.u_streams:
             u_stream.apply_stream(self.u, self.dx, self.dy)
 
@@ -64,4 +67,3 @@ class StableFluidsSolver:
 
         for s_source in self.s_sources:
             s_source.apply_stream(self.s, self.dx, self.dy)
-
