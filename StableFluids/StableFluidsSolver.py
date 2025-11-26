@@ -6,13 +6,15 @@ class StableFluidsSolver:
                  u, v, s,
                  u_velocity_conditions, v_velocity_conditions,
                  q_pressure_conditions, s_density_conditions,
-                 obstacle_mask, streams,
+                 obstacle_mask, u_streams, v_streams, s_sources,
                  gauss_seidel_viscosity_iterations = 45, gauss_seidel_pressure_iterations = 45):
 
         self.x_points = x_points
         self.y_points = y_points
         self.x_domain = x_domain
         self.y_domain = y_domain
+        self.dx = x_domain / (x_points - 1)
+        self.dy = y_domain / (y_points - 1)
         self.dt = dt
         self.viscosity = viscosity
         self.vorticity = vorticity
@@ -30,7 +32,9 @@ class StableFluidsSolver:
         self.s_density_conditions = s_density_conditions
 
         self.obstacle_mask = obstacle_mask
-        self.streams = streams
+        self.u_streams = u_streams
+        self.v_streams = v_streams
+        self.s_sources = s_sources
 
     def apply_boundary_velocity_conditions(self, u, v):
 
@@ -49,4 +53,15 @@ class StableFluidsSolver:
 
         for condition in self.s_density_conditions:
             condition.apply_density_boundary_conditions(s)
+
+    def simulation_step(self):
+
+        for u_stream in self.u_streams:
+            u_stream.apply_stream(self.u, self.dx, self.dy)
+
+        for v_stream in self.v_streams:
+            v_stream.apply_stream(self.v, self.dx, self.dy)
+
+        for s_source in self.s_sources:
+            s_source.apply_stream(self.s, self.dx, self.dy)
 
