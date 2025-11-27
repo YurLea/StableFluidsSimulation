@@ -125,9 +125,9 @@ class StableFluidsSolver:
 
     def advection_step(self):
         """Semi-Lagrangian advection step using numpy"""
-        u1 = np.zeros_like(self.u)
-        v1 = np.zeros_like(self.v)
-        s1 = np.zeros_like(self.s)
+        u1 = self.u.copy()
+        v1 = self.v.copy()
+        s1 = self.s.copy()
 
         I, J = np.meshgrid(np.arange(1, self.x_points - 1), np.arange(1, self.y_points - 1), indexing='ij')
         mask = ~self.obstacle_mask[I, J]
