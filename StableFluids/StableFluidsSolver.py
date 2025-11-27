@@ -52,6 +52,9 @@ class StableFluidsSolver:
         for condition in self.v_velocity_conditions:
             condition.apply_boundary_conditions(v)
 
+        u[self.obstacle_mask] = 0
+        v[self.obstacle_mask] = 0
+
     def apply_boundary_pressure_conditions(self, q):
 
         for condition in self.q_pressure_conditions:
@@ -61,6 +64,19 @@ class StableFluidsSolver:
 
         for condition in self.s_density_conditions:
             condition.apply_density_boundary_conditions(s)
+
+        mask_bottom = self.obstacle_mask & ~np.roll(self.obstacle_mask, -1, axis=1)
+
+        mask_top = self.obstacle_mask & ~np.roll(self.obstacle_mask, 1, axis=1)
+
+        mask_right = self.obstacle_mask & ~np.roll(self.obstacle_mask, -1, axis=0)
+
+        mask_left = self.obstacle_mask & ~np.roll(self.obstacle_mask, 1, axis=0)
+
+        s[mask_bottom] = np.roll(s, -1, axis=1)[mask_bottom]
+        s[mask_top] = np.roll(s, 1, axis=1)[mask_top]
+        s[mask_right] = np.roll(s, -1, axis=0)[mask_right]
+        s[mask_left] = np.roll(s, 1, axis=0)[mask_left]
 
     def simulation_step(self):
         self.source_step()
