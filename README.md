@@ -9,6 +9,9 @@ Modified Stable fluids algorithm
 
 ```console
 python test.py
+```
+
+##
 
 After that you will see default scenario of simulation
 
