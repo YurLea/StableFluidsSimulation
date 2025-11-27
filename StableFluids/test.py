@@ -4,6 +4,7 @@ from tqdm import tqdm
 import cmasher as cmr
 from SolverBuilder import SolverBuilder
 from BoundariesDomain import DomainBoundaryDirichlet, BoundaryType, DomainBoundaryNeumann
+from Obstacles import RectangleObstacle
 from Stream import RectangleStream
 
 x_size = 1.0
@@ -37,12 +38,13 @@ solver = (SolverBuilder()
                                                DomainBoundaryNeumann(border=BoundaryType.Left)])
           .with_v_velocity_stream(RectangleStream(x_left=0.42, y_left=0.1, x_size=0.2, y_size=0.08,
                                                   value=0.1))
+          #.with_obstacle(RectangleObstacle(x_left=0.45, y_left=0.5, width=0.1, height=0.05))
           .build()
           )
 
 plt.figure(figsize=(10, 8))
 
-for step in tqdm(range(1000)):
+for step in tqdm(range(4000)):
 
     curl, u0, v0 = solver.simulation_step()
 
@@ -52,6 +54,9 @@ for step in tqdm(range(1000)):
         plt.colorbar(label='Vorticity')
         plt.quiver(X[::2, ::2], Y[::2, ::2], u0[::2, ::2], v0[::2, ::2],
                    scale=10, color='white', alpha=0.7)
+        rect = plt.Rectangle((0.42, 0.5), 0.1, 0.05,
+                             facecolor='black', alpha=1.0, edgecolor='white')
+        plt.gca().add_patch(rect)
         plt.title(f'Time step: {step}')
         plt.xlabel('X')
         plt.ylabel('Y')

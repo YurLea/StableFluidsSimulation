@@ -45,7 +45,7 @@ class SolverBuilder:
     def with_obstacle(self, obstacle):
         dx = self.x_size / (self.x_points - 1)
         dy = self.y_size / (self.y_points - 1)
-        self.obstacle_mask = obstacle.apply_obstacle(self.obstacle_mask, dx, dy)
+        obstacle.apply_obstacle(self.obstacle_mask, dx, dy)
         return self
 
     def with_u_velocity_boundary_conditions(self, conditions):
