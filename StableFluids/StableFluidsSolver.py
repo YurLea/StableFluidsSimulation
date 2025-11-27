@@ -118,5 +118,47 @@ class StableFluidsSolver:
                                                       interior_i, interior_j] * self.dy,
                                                   self.v[interior_i, interior_j])
 
+        self.apply_boundary_velocity_conditions(self.u, self.v)
+        self.apply_density_boundary_conditions(self.s)
+
+    def advection_step(self):
+        """Semi-Lagrangian advection step using numpy"""
+        u1 = np.zeros_like(self.u)
+        v1 = np.zeros_like(self.v)
+        s1 = np.zeros_like(self.s)
+
+        I, J = np.meshgrid(np.arange(1, self.x_points - 1), np.arange(1, self.y_points - 1), indexing='ij')
+        mask = ~self.obstacle_mask[I, J]
+
+        I_val, J_val = I[mask], J[mask]
+
+        x_prev = I_val * self.dx - self.dt * self.u[I_val, J_val]
+        y_prev = J_val * self.dy - self.dt * self.v[I_val, J_val]
+
+        x_prev = np.clip(x_prev, self.dx / 2, self.x_domain - self.dx / 2)
+        y_prev = np.clip(y_prev, self.dy / 2, self.y_domain - self.dy / 2)
+
+        i1 = (x_prev / self.dx).astype(int)
+        i2 = i1 + 1
+        j1 = (y_prev / self.dy).astype(int)
+        j2 = j1 + 1
+
+        x1, x2 = i1 * self.dx, i2 * self.dx
+        y1, y2 = j1 * self.dy, j2 * self.dy
+
+        wx1 = (x2 - x_prev) / self.dx
+        wx2 = (x_prev - x1) / self.dx
+        wy1 = (y2 - y_prev) / self.dy
+        wy2 = (y_prev - y1) / self.dy
+
+        for field_in, field_out in [(self.u, u1), (self.v, v1), (self.s, s1)]:
+            field_out[I_val, J_val] = (wx1 * wy1 * field_in[i1, j1] +
+                                       wx2 * wy1 * field_in[i2, j1] +
+                                       wx1 * wy2 * field_in[i1, j2] +
+                                       wx2 * wy2 * field_in[i2, j2])
+
+        self.apply_boundary_velocity_conditions(self.u1, self.v1)
+        self.apply_density_boundary_conditions(self.s1)
+
 
 
