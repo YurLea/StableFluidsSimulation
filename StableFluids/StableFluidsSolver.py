@@ -59,6 +59,8 @@ class StableFluidsSolver:
 
         self.vorticity_step()
 
+        self.advection_step()
+
     def source_step(self):
 
         for u_stream in self.u_streams:
