@@ -268,3 +268,19 @@ class StableFluidsSolver:
         self.v = v_corrected.copy()
         self.s = self.s1.copy()
 
+    def curl_2d(self, u, v):
+        """Calculate 2D vorticity"""
+        curl = np.zeros((self.x_points, self.y_points))
+
+        inner = np.s_[1:-1, 1:-1]
+        right = np.s_[2:, 1:-1]
+        left = np.s_[:-2, 1:-1]
+        top = np.s_[1:-1, 2:]
+        bottom = np.s_[1:-1, :-2]
+
+        dv_dx = (v[right] - v[left]) / (2 * self.dx)
+        du_dy = (u[top] - u[bottom]) / (2 * self.dy)
+        curl[inner] = dv_dx - du_dy
+
+        return curl
+
