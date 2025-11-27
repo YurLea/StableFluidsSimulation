@@ -71,6 +71,8 @@ class StableFluidsSolver:
 
         self.diffusion_step()
 
+        self.pressure_poisson_step()
+
     def source_step(self):
 
         for u_stream in self.u_streams:
@@ -234,4 +236,35 @@ class StableFluidsSolver:
             self.q[i, j] = np.where(update_mask, (sum_q - rhs) / sum_coefficient, self.q[i, j])
 
             self.apply_boundary_pressure_conditions(self.q)
+
+    def correction_step(self):
+        """Velocity correction step with numpy"""
+        u_corrected = self.u3.copy()
+        v_corrected = self.v3.copy()
+
+        i, j = slice(1, self.x_points - 1), slice(1, self.y_points - 1)
+
+        valid_u_correction = (~self.obstacle_mask[i, j] &
+                              ~self.obstacle_mask[2:, j] &
+                              ~self.obstacle_mask[:-2, j])
+
+        valid_v_correction = (~self.obstacle_mask[i, j] &
+                              ~self.obstacle_mask[i, 2:] &
+                              ~self.obstacle_mask[i, :-2])
+
+        u_gradient = (self.q[2:, j] - self.q[:-2, j]) / (2 * self.dx)
+        u_corrected[i, j] = np.where(valid_u_correction,
+                                     self.u3[i, j] - u_gradient,
+                                     self.u3[i, j])
+
+        v_gradient = (self.q[i, 2:] - self.q[i, :-2]) / (2 * self.dy)
+        v_corrected[i, j] = np.where(valid_v_correction,
+                                     self.v3[i, j] - v_gradient,
+                                     self.v3[i, j])
+
+        self.apply_boundary_velocity_conditions(u_corrected, v_corrected)
+
+        self.u = u_corrected.copy()
+        self.v = v_corrected.copy()
+        self.s = self.s1.copy()
 
