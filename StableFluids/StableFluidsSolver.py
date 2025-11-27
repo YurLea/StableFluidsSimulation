@@ -55,10 +55,12 @@ class StableFluidsSolver:
             condition.apply_density_boundary_conditions(s)
 
     def simulation_step(self):
-
         self.source_step()
 
+        self.vorticity_step()
+
     def source_step(self):
+
         for u_stream in self.u_streams:
             u_stream.apply_stream(self.u, self.dx, self.dy)
 
@@ -67,3 +69,54 @@ class StableFluidsSolver:
 
         for s_source in self.s_sources:
             s_source.apply_stream(self.s, self.dx, self.dy)
+
+    def vorticity_step(self):
+        """Vorticity confinement using numpy"""
+        w = np.zeros_like(self.u)
+
+        interior = slice(1, -1)
+
+        valid_w = (~self.obstacle_mask[1:-1, 1:-1] &
+                   ~self.obstacle_mask[2:, 1:-1] &
+                   ~self.obstacle_mask[:-2, 1:-1] &
+                   ~self.obstacle_mask[1:-1, 2:] &
+                   ~self.obstacle_mask[1:-1, :-2])
+
+        w[1:-1, 1:-1] = np.where(valid_w,
+                                 (self.v[2:, 1:-1] - self.v[:-2, 1:-1]) / (2 * self.dx) -
+                                 (self.u[1:-1, 2:] - self.u[1:-1, :-2]) / (2 * self.dy),
+                                 0)
+
+        theta_x = np.zeros_like(self.u)
+        theta_y = np.zeros_like(self.u)
+
+        valid_theta_x = ~self.obstacle_mask[1:-1, 1:-1] & ~self.obstacle_mask[2:, 1:-1] & ~self.obstacle_mask[:-2, 1:-1]
+        valid_theta_y = ~self.obstacle_mask[1:-1, 1:-1] & ~self.obstacle_mask[1:-1, 2:] & ~self.obstacle_mask[1:-1, :-2]
+
+        theta_x[1:-1, 1:-1] = np.where(valid_theta_x, (np.abs(w[2:, 1:-1]) - np.abs(w[:-2, 1:-1])) / (2 * self.dx), 0)
+        theta_y[1:-1, 1:-1] = np.where(valid_theta_y, (np.abs(w[1:-1, 2:]) - np.abs(w[1:-1, :-2])) / (2 * self.dy), 0)
+
+        magnitude = np.sqrt(theta_x ** 2 + theta_y ** 2)
+        magnitude = np.where(magnitude < 1e-10, 1e-10, magnitude)
+
+        phi_x = np.where(~self.obstacle_mask, theta_x / magnitude, 0)
+        phi_y = np.where(~self.obstacle_mask, theta_y / magnitude, 0)
+
+        tx = np.where(~self.obstacle_mask, w * phi_y, 0)
+        ty = np.where(~self.obstacle_mask, -w * phi_x, 0)
+
+        interior_i, interior_j = slice(1, -1), slice(1, -1)
+        valid_cells = ~self.obstacle_mask[interior_i, interior_j]
+
+        self.u[interior_i, interior_j] = np.where(valid_cells,
+                                                  self.u[interior_i, interior_j] + self.vorticity * tx[
+                                                      interior_i, interior_j] * self.dx,
+                                                  self.u[interior_i, interior_j])
+
+        self.v[interior_i, interior_j] = np.where(valid_cells,
+                                                  self.v[interior_i, interior_j] + self.vorticity * ty[
+                                                      interior_i, interior_j] * self.dy,
+                                                  self.v[interior_i, interior_j])
+
+
+
