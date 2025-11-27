@@ -73,6 +73,10 @@ class StableFluidsSolver:
 
         self.pressure_poisson_step()
 
+        self.correction_step()
+
+        return self.curl_2d(self.u, self.v)
+
     def source_step(self):
 
         for u_stream in self.u_streams:
