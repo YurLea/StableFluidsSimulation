@@ -69,6 +69,8 @@ class StableFluidsSolver:
 
         self.advection_step()
 
+        self.diffusion_step()
+
     def source_step(self):
 
         for u_stream in self.u_streams:
@@ -201,5 +203,35 @@ class StableFluidsSolver:
 
             self.apply_boundary_velocity_conditions(self.u2, self.v2)
 
+    def pressure_poisson_step(self):
+        """Pressure-Poisson step with numpy"""
+        self.u3, self.v3 = self.u2.copy(), self.v2.copy()
 
+        dx2, dy2 = self.dx * self.dx, self.dy * self.dy
+        i, j = slice(1, -1), slice(1, -1)
+
+        solid_center = self.obstacle_mask[i, j]
+        solid_right = self.obstacle_mask[2:, j]
+        solid_left = self.obstacle_mask[:-2, j]
+        solid_top = self.obstacle_mask[i, 2:]
+        solid_bottom = self.obstacle_mask[i, :-2]
+
+        for _ in range(self.gauss_seidel_pressure_iterations):
+            sum_q = (np.where(~solid_right, self.q[2:, j], 0) / dx2 +
+                     np.where(~solid_left, self.q[:-2, j], 0) / dx2 +
+                     np.where(~solid_top, self.q[i, 2:], 0) / dy2 +
+                     np.where(~solid_bottom, self.q[i, :-2], 0) / dy2)
+
+            sum_coefficient = (np.where(~solid_right, 1.0, 0) / dx2 +
+                         np.where(~solid_left, 1.0, 0) / dx2 +
+                         np.where(~solid_top, 1.0, 0) / dy2 +
+                         np.where(~solid_bottom, 1.0, 0) / dy2)
+
+            rhs = ((self.u3[2:, j] - self.u3[:-2, j]) / (2 * self.dx) +
+                   (self.v3[i, 2:] - self.v3[i, :-2]) / (2 * self.dy))
+
+            update_mask = ~solid_center & (sum_coefficient > 0)
+            self.q[i, j] = np.where(update_mask, (sum_q - rhs) / sum_coefficient, self.q[i, j])
+
+            self.apply_boundary_pressure_conditions(self.q)
 
