@@ -26,6 +26,14 @@ class StableFluidsSolver:
         self.s = s
         self.q = np.zeros((x_points, y_points))
 
+        self.u1 = None
+        self.v1 = None
+        self.s1 = None
+        self.u2 = None
+        self.v2 = None
+        self.u3 = None
+        self.v3 = None
+
         self.u_velocity_conditions = u_velocity_conditions
         self.v_velocity_conditions = v_velocity_conditions
         self.q_pressure_conditions = q_pressure_conditions
@@ -125,9 +133,9 @@ class StableFluidsSolver:
 
     def advection_step(self):
         """Semi-Lagrangian advection step using numpy"""
-        u1 = self.u.copy()
-        v1 = self.v.copy()
-        s1 = self.s.copy()
+        self.u1 = self.u.copy()
+        self.v1 = self.v.copy()
+        self.s1 = self.s.copy()
 
         I, J = np.meshgrid(np.arange(1, self.x_points - 1), np.arange(1, self.y_points - 1), indexing='ij')
         mask = ~self.obstacle_mask[I, J]
@@ -153,14 +161,45 @@ class StableFluidsSolver:
         wy1 = (y2 - y_prev) / self.dy
         wy2 = (y_prev - y1) / self.dy
 
-        for field_in, field_out in [(self.u, u1), (self.v, v1), (self.s, s1)]:
+        for field_in, field_out in [(self.u, self.u1), (self.v, self.v1), (self.s, self.s1)]:
             field_out[I_val, J_val] = (wx1 * wy1 * field_in[i1, j1] +
                                        wx2 * wy1 * field_in[i2, j1] +
                                        wx1 * wy2 * field_in[i1, j2] +
                                        wx2 * wy2 * field_in[i2, j2])
 
-        self.apply_boundary_velocity_conditions(u1, v1)
-        self.apply_density_boundary_conditions(s1)
+        self.apply_boundary_velocity_conditions(self.u1, self.v1)
+        self.apply_density_boundary_conditions(self.s1)
+
+    def diffusion_step(self):
+        """Viscous diffusion using Gauss-Seidel iterations with numpy"""
+        self.u2 = self.u1.copy()
+        self.v2 = self.v1.copy()
+
+        alpha = self.viscosity * self.dt
+        dx2 = self.dx * self.dx
+        dy2 = self.dy * self.dy
+        denominator = 1 + 2 * alpha * (1 / dx2 + 1 / dy2)
+
+        interior_i = slice(1, self.x_points - 1)
+        interior_j = slice(1, self.y_points - 1)
+        valid_mask = ~self.obstacle_mask[interior_i, interior_j]
+
+        for _ in range(self.gauss_seidel_viscosity_iterations):
+            u_update = (self.u1[interior_i, interior_j] + alpha * (
+                    (self.u2[2:, interior_j] + self.u2[:-2, interior_j]) / dx2 +
+                    (self.u2[interior_i, 2:] + self.u2[interior_i, :-2]) / dy2
+            )) / denominator
+
+            self.u2[interior_i, interior_j] = np.where(valid_mask, u_update, self.u2[interior_i, interior_j])
+
+            v_update = (self.v1[interior_i, interior_j] + alpha * (
+                    (self.v2[2:, interior_j] + self.v2[:-2, interior_j]) / dx2 +
+                    (self.v2[interior_i, 2:] + self.v2[interior_i, :-2]) / dy2
+            )) / denominator
+
+            self.v2[interior_i, interior_j] = np.where(valid_mask, v_update, self.v2[interior_i, interior_j])
+
+            self.apply_boundary_velocity_conditions(self.u2, self.v2)
 
 
 
