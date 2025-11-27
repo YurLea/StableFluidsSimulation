@@ -54,9 +54,9 @@ for step in tqdm(range(4000)):
         plt.colorbar(label='Vorticity')
         plt.quiver(X[::2, ::2], Y[::2, ::2], u0[::2, ::2], v0[::2, ::2],
                    scale=10, color='white', alpha=0.7)
-        rect = plt.Rectangle((0.42, 0.5), 0.1, 0.05,
-                             facecolor='black', alpha=1.0, edgecolor='white')
-        plt.gca().add_patch(rect)
+        #rect = plt.Rectangle((0.42, 0.5), 0.1, 0.05,
+        #                     facecolor='black', alpha=1.0, edgecolor='white')
+        #plt.gca().add_patch(rect)
         plt.title(f'Time step: {step}')
         plt.xlabel('X')
         plt.ylabel('Y')
