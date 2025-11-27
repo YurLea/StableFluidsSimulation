@@ -11,4 +11,4 @@ class RectangleStream:
         j_left = int(self.y_left / dy)
         i_right = int((self.x_left + self.x_size) / dx)
         j_right = int((self.y_left + self.y_size) / dy)
-        field[i_left:i_right, j_left:j_right] = self.value
+        field[i_left:i_right, j_left:j_right] += self.value

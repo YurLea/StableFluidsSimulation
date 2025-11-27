@@ -48,20 +48,20 @@ class SolverBuilder:
         self.obstacle_mask = obstacle.apply_obstacle(self.obstacle_mask, dx, dy)
         return self
 
-    def with_u_velocity_condition(self, condition):
-        self.u_velocity_conditions.append(condition)
+    def with_u_velocity_boundary_conditions(self, conditions):
+        self.u_velocity_conditions = conditions
         return self
 
-    def with_v_velocity_condition(self, condition):
-        self.v_velocity_conditions.append(condition)
+    def with_v_velocity_boundary_conditions(self, conditions):
+        self.v_velocity_conditions = conditions
         return self
 
-    def with_q_pressure_condition(self, condition):
-        self.q_pressure_conditions.append(condition)
+    def with_q_pressure_boundary_conditions(self, conditions):
+        self.q_pressure_conditions = conditions
         return self
 
-    def with_s_density_condition(self, condition):
-        self.s_density_conditions.append(condition)
+    def with_s_density_boundary_conditions(self, conditions):
+        self.s_density_conditions = conditions
         return self
 
     def with_u_velocity_stream(self, stream):

@@ -58,12 +58,12 @@ class StableFluidsSolver:
     def apply_boundary_pressure_conditions(self, q):
 
         for condition in self.q_pressure_conditions:
-            condition.apply_boundary_pressure(q)
+            condition.apply_boundary_conditions(q)
 
     def apply_density_boundary_conditions(self, s):
 
         for condition in self.s_density_conditions:
-            condition.apply_density_boundary_conditions(s)
+            condition.apply_boundary_conditions(s)
 
         mask_bottom = self.obstacle_mask & ~np.roll(self.obstacle_mask, -1, axis=1)
 
@@ -91,7 +91,7 @@ class StableFluidsSolver:
 
         self.correction_step()
 
-        return self.curl_2d(self.u, self.v)
+        return self.curl_2d(self.u, self.v), self.u, self.v
 
     def source_step(self):
 
