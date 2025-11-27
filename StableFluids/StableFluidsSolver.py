@@ -157,8 +157,8 @@ class StableFluidsSolver:
                                        wx1 * wy2 * field_in[i1, j2] +
                                        wx2 * wy2 * field_in[i2, j2])
 
-        self.apply_boundary_velocity_conditions(self.u1, self.v1)
-        self.apply_density_boundary_conditions(self.s1)
+        self.apply_boundary_velocity_conditions(u1, v1)
+        self.apply_density_boundary_conditions(s1)
 
 
 
