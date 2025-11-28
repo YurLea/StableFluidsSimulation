@@ -9,8 +9,8 @@ from Stream import RectangleStream
 
 x_size = 1.0
 y_size = 1.0
-x_points = 50
-y_points = 50
+x_points = 80
+y_points = 80
 
 x = np.linspace(0.0, x_size, x_points)
 y = np.linspace(0.0, y_size, y_points)
@@ -19,7 +19,7 @@ X, Y = np.meshgrid(x, y, indexing="ij")
 solver = (SolverBuilder()
           .with_grid_points(x_points=x_points, y_points=y_points)
           .with_grid_size(x_size=x_size, y_size=y_size)
-          .with_physics_parameters(dt=0.01, viscosity=0.001, vorticity=0)
+          .with_physics_parameters(dt=0.01, viscosity=0.001, vorticity=0.05)
           .with_u_velocity_boundary_conditions([DomainBoundaryDirichlet(value=0, border=BoundaryType.Top),
                                                DomainBoundaryDirichlet(value=0, border=BoundaryType.Bottom),
                                                DomainBoundaryDirichlet(value=0, border=BoundaryType.Right),
@@ -37,8 +37,10 @@ solver = (SolverBuilder()
                                                DomainBoundaryNeumann(border=BoundaryType.Right),
                                                DomainBoundaryNeumann(border=BoundaryType.Left)])
           .with_v_velocity_stream(RectangleStream(x_left=0.42, y_left=0.1, x_size=0.2, y_size=0.08,
-                                                  value=0.1))
-          #.with_obstacle(RectangleObstacle(x_left=0.45, y_left=0.5, width=0.1, height=0.05))
+                                                  value=0.02))
+          .with_s_density_source(RectangleStream(x_left=0.47, y_left=0.1, x_size=0.1, y_size=0.05,
+                                                  value=0.03))
+          .with_obstacle(RectangleObstacle(x_left=0.45, y_left=0.5, width=0.1, height=0.05))
           .build()
           )
 
@@ -50,10 +52,10 @@ for step in tqdm(range(4000)):
 
     if step % 10 == 0:
         plt.clf()
-        plt.contourf(X, Y, curl, cmap=cmr.redshift, levels=50)
+        plt.contourf(X, Y, curl, cmap=cmr.sepia, levels=80)
         plt.colorbar(label='Vorticity')
-        plt.quiver(X[::2, ::2], Y[::2, ::2], u0[::2, ::2], v0[::2, ::2],
-                   scale=10, color='white', alpha=0.7)
+        #plt.quiver(X[::2, ::2], Y[::2, ::2], u0[::2, ::2], v0[::2, ::2],
+        #           scale=10, color='white', alpha=0.7)
         #rect = plt.Rectangle((0.42, 0.5), 0.1, 0.05,
         #                     facecolor='black', alpha=1.0, edgecolor='white')
         #plt.gca().add_patch(rect)

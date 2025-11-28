@@ -91,7 +91,7 @@ class StableFluidsSolver:
 
         self.correction_step()
 
-        return self.curl_2d(self.u, self.v), self.u, self.v
+        return self.s, self.u, self.v
 
     def source_step(self):
 
