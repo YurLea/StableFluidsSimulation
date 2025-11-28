@@ -40,7 +40,7 @@ solver = (SolverBuilder()
                                                   value=0.02))
           .with_s_density_source(RectangleStream(x_left=0.47, y_left=0.1, x_size=0.1, y_size=0.05,
                                                   value=0.03))
-          .with_obstacle(RectangleObstacle(x_left=0.45, y_left=0.5, width=0.1, height=0.05))
+          .with_obstacle(RectangleObstacle(x_left=0.42, y_left=0.5, width=0.1, height=0.05))
           .build()
           )
 
@@ -54,8 +54,8 @@ for step in tqdm(range(4000)):
         plt.clf()
         plt.contourf(X, Y, curl, cmap=cmr.sepia, levels=80)
         plt.colorbar(label='Vorticity')
-        #plt.quiver(X[::2, ::2], Y[::2, ::2], u0[::2, ::2], v0[::2, ::2],
-        #           scale=10, color='white', alpha=0.7)
+        plt.quiver(X[::2, ::2], Y[::2, ::2], u0[::2, ::2], v0[::2, ::2],
+                   scale=10, color='white', alpha=0.7)
         rect = plt.Rectangle((0.42, 0.5), 0.1, 0.05,
                              facecolor='black', alpha=1.0, edgecolor='white')
         plt.gca().add_patch(rect)

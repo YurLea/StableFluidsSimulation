@@ -9,5 +9,5 @@ class RectangleObstacle:
         i_left = int(self.x_left / dx)
         j_left = int(self.y_left / dy)
         i_right = int((self.x_left + self.width) / dx)
-        j_right = int((self.y_left + self.width) / dy)
+        j_right = int((self.y_left + self.height) / dy)
         field[i_left:i_right, j_left:j_right] = True
