@@ -304,3 +304,12 @@ class StableFluidsSolver:
 
         return curl
 
+    def get_curl_2d(self):
+        return self.curl_2d(self.u, self.v)
+
+    def get_velocity_fields(self):
+        return self.u, self.v
+
+    def get_density_field(self):
+        return self.s
+
