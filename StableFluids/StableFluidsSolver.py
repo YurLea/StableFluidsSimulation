@@ -193,33 +193,40 @@ class StableFluidsSolver:
         self.apply_density_boundary_conditions(self.s1)
 
     def diffusion_step(self):
-        """Viscous diffusion using Gauss-Seidel iterations with numpy"""
+        """Vectorized Gauss-Seidel with numpy strides"""
         self.u2 = self.u1.copy()
         self.v2 = self.v1.copy()
 
         alpha = self.viscosity * self.dt
-        dx2 = self.dx * self.dx
-        dy2 = self.dy * self.dy
+        dx2, dy2 = self.dx ** 2, self.dy ** 2
         denominator = 1 + 2 * alpha * (1 / dx2 + 1 / dy2)
 
-        interior_i = slice(1, self.x_points - 1)
-        interior_j = slice(1, self.y_points - 1)
-        valid_mask = ~self.obstacle_mask[interior_i, interior_j]
+        interior = slice(1, -1)
+        valid_mask = ~self.obstacle_mask[interior, interior]
+
+        # Предварительные вычисления
+        u1_int = self.u1[interior, interior]
+        v1_int = self.v1[interior, interior]
 
         for _ in range(self.gauss_seidel_viscosity_iterations):
-            u_update = (self.u1[interior_i, interior_j] + alpha * (
-                    (self.u2[2:, interior_j] + self.u2[:-2, interior_j]) / dx2 +
-                    (self.u2[interior_i, 2:] + self.u2[interior_i, :-2]) / dy2
+            # Используем views для избежания копирования
+            u2_int = self.u2[interior, interior]
+            v2_int = self.v2[interior, interior]
+
+            # Векторизованное обновление
+            u_update = (u1_int + alpha * (
+                    (self.u2[2:, interior] + self.u2[:-2, interior]) / dx2 +
+                    (self.u2[interior, 2:] + self.u2[interior, :-2]) / dy2
             )) / denominator
 
-            self.u2[interior_i, interior_j] = np.where(valid_mask, u_update, self.u2[interior_i, interior_j])
-
-            v_update = (self.v1[interior_i, interior_j] + alpha * (
-                    (self.v2[2:, interior_j] + self.v2[:-2, interior_j]) / dx2 +
-                    (self.v2[interior_i, 2:] + self.v2[interior_i, :-2]) / dy2
+            v_update = (v1_int + alpha * (
+                    (self.v2[2:, interior] + self.v2[:-2, interior]) / dx2 +
+                    (self.v2[interior, 2:] + self.v2[interior, :-2]) / dy2
             )) / denominator
 
-            self.v2[interior_i, interior_j] = np.where(valid_mask, v_update, self.v2[interior_i, interior_j])
+            # In-place обновление с маской
+            np.copyto(u2_int, u_update, where=valid_mask)
+            np.copyto(v2_int, v_update, where=valid_mask)
 
             self.apply_boundary_velocity_conditions(self.u2, self.v2)
 
